@@ -1,5 +1,7 @@
 # Gomoku Plus · 趣味五子棋
 
+A simple Gomoku (Five in a Row) game with optional rules: ghost preview before placing a stone, a 10% chance to move twice in a row, and a 10% chance that a random piece already on the board disappears after each move. Runs as a **Python (tkinter)** desktop app or in the **browser** via a single HTML file.
+
 带趣味规则的简易五子棋，支持 **Python (tkinter)** 与 **网页版** 两种运行方式。
 
 ## 玩法说明
