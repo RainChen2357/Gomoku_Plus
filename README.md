@@ -1,6 +1,6 @@
 # Gomoku Plus · 趣味五子棋
 
-A simple Gomoku (Five in a Row) game with optional rules: ghost preview before placing a stone, a 10% chance to move twice in a row, and a 10% chance that a random piece already on the board disappears after each move. Runs as a **Python (tkinter)** desktop app or in the **browser** via a single HTML file.
+A simple Gomoku (Five in a Row) game with optional rules: ghost preview before placing a stone, a chance to move twice in a row, and a chance that a random piece already on the board disappears after each move. **Both probabilities are adjustable (0–100%) at any time** in the UI. Runs as a **Python (tkinter)** desktop app or in the **browser** via a single HTML file.
 
 带趣味规则的简易五子棋，支持 **Python (tkinter)** 与 **网页版** 两种运行方式。
 
@@ -16,8 +16,8 @@ A simple Gomoku (Five in a Row) game with optional rules: ghost preview before p
 | 规则 | 说明 |
 |------|------|
 | **落子虚影** | 移动鼠标时，在合法空位上会显示当前方棋子的半透明虚影，方便预览落子位置。 |
-| **连下两颗** | 每次落子后有 **10% 概率** 触发「连下两颗」：当前方可以**再下一子**，界面顶部会提示「🎲 连下两颗！请再下一子」。 |
-| **随机消失** | 每次落子后有 **20% 概率** 使棋盘上**之前已存在的某一颗棋子（黑白均可）随机消失**，刚下的子不会被消失。胜负以**落子后当前棋盘**是否连成五子为准。 |
+| **连下两颗** | 每次落子后有**一定概率**触发「连下两颗」：当前方可以**再下一子**，界面顶部会提示「🎲 连下两颗！请再下一子」。概率可在界面中**随时调节**（0–100%），默认 10%。 |
+| **随机消失** | 每次落子后有**一定概率**使棋盘上**之前已存在的某一颗棋子（黑白均可）随机消失**，刚下的子不会被消失。胜负以**落子后当前棋盘**是否连成五子为准。概率可在界面中**随时调节**（0–100%），默认 10%。 |
 
 ## 运行方法
 

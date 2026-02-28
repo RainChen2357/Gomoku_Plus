@@ -159,11 +159,27 @@
     .btn:active {
       transform: scale(0.98);
     }
+
+    .prob-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+      color: #a0a0a0;
+    }
+    .prob-row label { display: flex; align-items: center; gap: 6px; }
+    .prob-row input[type="range"] { width: 80px; accent-color: var(--accent); }
+    .prob-row .val { min-width: 2em; }
   </style>
 </head>
 <body>
   <h1>五子棋</h1>
   <div class="bonus" id="bonus" aria-live="polite"></div>
+  <div class="prob-row">
+    <label>连下两颗 <input type="range" id="probDouble" min="0" max="100" value="10"><span class="val" id="probDoubleVal">10</span>%</label>
+    <label>随机消失 <input type="range" id="probDisappear" min="0" max="100" value="10"><span class="val" id="probDisappearVal">10</span>%</label>
+  </div>
   <div class="board-wrap">
     <div class="board" id="board" role="grid" aria-label="15乘15五子棋棋盘"></div>
   </div>
@@ -187,6 +203,13 @@
     const statusEl = document.getElementById("status");
     const bonusEl = document.getElementById("bonus");
     const resetBtn = document.getElementById("reset");
+    const probDoubleEl = document.getElementById("probDouble");
+    const probDoubleValEl = document.getElementById("probDoubleVal");
+    const probDisappearEl = document.getElementById("probDisappear");
+    const probDisappearValEl = document.getElementById("probDisappearVal");
+
+    probDoubleEl.addEventListener("input", () => { probDoubleValEl.textContent = probDoubleEl.value; });
+    probDisappearEl.addEventListener("input", () => { probDisappearValEl.textContent = probDisappearEl.value; });
 
     function createBoard() {
       boardEl.innerHTML = "";
@@ -259,7 +282,8 @@
     }
 
     function removeRandomPrevious(excludeR, excludeC) {
-      if (Math.random() >= 0.1) return;
+      const p = Number(probDisappearEl.value) / 100;
+      if (p <= 0 || Math.random() >= p) return;
       const candidates = [];
       for (let r = 0; r < BOARD_SIZE; r++)
         for (let c = 0; c < BOARD_SIZE; c++)
@@ -323,7 +347,8 @@
         currentPlayer = 3 - currentPlayer;
         statusEl.textContent = `轮到 ${currentPlayer === 1 ? "黑棋" : "白棋"} 下子`;
       } else {
-        if (Math.random() < 0.1) {
+        const pDouble = Number(probDoubleEl.value) / 100;
+        if (pDouble > 0 && Math.random() < pDouble) {
           doubleMoveRemaining = 1;
           bonusEl.textContent = "🎲 连下两颗！请再下一子";
           statusEl.textContent = `轮到 ${currentPlayer === 1 ? "黑棋" : "白棋"} 再下一子（连下两颗）`;

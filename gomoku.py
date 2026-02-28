@@ -55,6 +55,28 @@ class Gomoku:
         self.bonus_label = tk.Label(top_frame, text="", font=(self.FONT_UI[0], 11, "bold"), fg="#e74c3c", bg=self.COLOR_BG)
         self.bonus_label.pack(pady=(4, 0))
 
+        # 0'. 概率调节（随时生效）
+        prob_frame = tk.Frame(self.root, bg=self.COLOR_BG)
+        prob_frame.pack(pady=(8, 4))
+        tk.Label(prob_frame, text="连下两颗", font=(self.FONT_UI[0], 9), fg="#a0a0a0", bg=self.COLOR_BG).pack(side=tk.LEFT, padx=(0, 4))
+        self.prob_double_scale = tk.Scale(
+            prob_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=80,
+            showvalue=True, bg=self.COLOR_BG, fg="#e0e0e0", troughcolor="#444",
+            highlightthickness=0, font=(self.FONT_UI[0], 8)
+        )
+        self.prob_double_scale.set(10)
+        self.prob_double_scale.pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(prob_frame, text="%", font=(self.FONT_UI[0], 9), fg="#a0a0a0", bg=self.COLOR_BG).pack(side=tk.LEFT, padx=(0, 16))
+        tk.Label(prob_frame, text="随机消失", font=(self.FONT_UI[0], 9), fg="#a0a0a0", bg=self.COLOR_BG).pack(side=tk.LEFT, padx=(0, 4))
+        self.prob_disappear_scale = tk.Scale(
+            prob_frame, from_=0, to=100, orient=tk.HORIZONTAL, length=80,
+            showvalue=True, bg=self.COLOR_BG, fg="#e0e0e0", troughcolor="#444",
+            highlightthickness=0, font=(self.FONT_UI[0], 8)
+        )
+        self.prob_disappear_scale.set(10)
+        self.prob_disappear_scale.pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(prob_frame, text="%", font=(self.FONT_UI[0], 9), fg="#a0a0a0", bg=self.COLOR_BG).pack(side=tk.LEFT)
+
         # 1. 画布（木质棋盘 + 细边框）
         self.canvas = tk.Canvas(
             self.root, width=self.canvas_size, height=self.canvas_size,
@@ -167,8 +189,9 @@ class Gomoku:
                 self.place_stone(y_grid, x_grid)
 
     def remove_random_previous_stone(self, exclude_row, exclude_col):
-        """有 10% 概率从本步之前已有的棋子中随机消失一个（不包含刚下的 exclude）"""
-        if random.random() >= 0.2:
+        """按当前设定概率，从本步之前已有的棋子中随机消失一个（不包含刚下的 exclude）"""
+        prob = self.prob_disappear_scale.get() / 100.0
+        if prob <= 0 or random.random() >= prob:
             return
         # 收集本步之前已有的所有棋子（排除刚下的那一格）
         candidates = []
@@ -238,8 +261,9 @@ class Gomoku:
                 player_name = "黑棋 (Black)" if self.current_player == 1 else "白棋 (White)"
                 self.status_label.config(text=f"轮到 {player_name} 下子")
             else:
-                # 10% 概率获得连下两颗
-                if random.random() < 0.1:
+                # 按当前设定概率获得连下两颗
+                prob = self.prob_double_scale.get() / 100.0
+                if prob > 0 and random.random() < prob:
                     self.double_move_remaining = 1
                     self.bonus_label.config(text="🎲 连下两颗！请再下一子")
                     player_name = "黑棋 (Black)" if self.current_player == 1 else "白棋 (White)"
