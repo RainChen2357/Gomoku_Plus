@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>五子棋 Gomoku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0e0d;
+      --board: linear-gradient(145deg, #c9a86c 0%, #a68b5b 50%, #8b7340 100%);
+      --grid: rgba(60, 40, 20, 0.7);
+      --stone-black: radial-gradient(circle at 30% 30%, #4a4a4a, #1c1c1c);
+      --stone-white: radial-gradient(circle at 35% 35%, #fffef8, #e8e6dc);
+      --ghost-black: rgba(80, 80, 80, 0.5);
+      --ghost-white: rgba(220, 220, 220, 0.5);
+      --accent: #d4af37;
+      --text: #e8e4dc;
+      --btn: #6b4423;
+      --btn-hover: #8b5a2b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0 0 4px 0;
+      letter-spacing: 0.08em;
+    }
+
+    .bonus {
+      min-height: 28px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e74c3c;
+      margin-bottom: 8px;
+    }
+
+    .board-wrap {
+      padding: 20px;
+      background: linear-gradient(165deg, #2a2520 0%, #1a1815 100%);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(15, 32px);
+      grid-template-rows: repeat(15, 32px);
+      background: var(--board);
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .cell {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      border-right: 1px solid var(--grid);
+      border-bottom: 1px solid var(--grid);
+    }
+
+    .cell:nth-child(15n) { border-right: none; }
+    .cell:nth-last-child(-n+15) { border-bottom: none; }
+    .cell:nth-child(15n+1) { border-left: 1px solid var(--grid); }
+    .cell:nth-child(-n+15) { border-top: 1px solid var(--grid); }
+
+    .cell.star .star-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #3d2914;
+      border-radius: 50%;
+      box-shadow: inset 0 0 2px rgba(0,0,0,0.3);
+    }
+
+    .stone, .ghost {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      position: absolute;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .stone.black {
+      background: var(--stone-black);
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.4), inset -1px -1px 2px rgba(0,0,0,0.3);
+    }
+
+    .stone.white {
+      background: var(--stone-white);
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.25), inset 1px 1px 2px rgba(255,255,255,0.8);
+    }
+
+    .ghost.black {
+      background: var(--ghost-black);
+      border: 1px solid rgba(60,60,60,0.6);
+    }
+
+    .ghost.white {
+      background: var(--ghost-white);
+      border: 1px solid rgba(120,120,120,0.5);
+    }
+
+    .footer {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: #b0aca0;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      background: var(--btn);
+      color: #f0ebe0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: var(--btn-hover);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <h1>五子棋</h1>
+  <div class="bonus" id="bonus" aria-live="polite"></div>
+  <div class="board-wrap">
+    <div class="board" id="board" role="grid" aria-label="15乘15五子棋棋盘"></div>
+  </div>
+  <div class="footer">
+    <span class="status" id="status">轮到 黑棋 下子</span>
+    <button type="button" class="btn" id="reset">重新开始</button>
+  </div>
+
+  <script>
+    const BOARD_SIZE = 15;
+    const STAR = [3, 7, 11];
+
+    let board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+    let currentPlayer = 1;
+    let gameOver = false;
+    let doubleMoveRemaining = 0;
+    let ghostEl = null;
+    let ghostCell = null;
+
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    const bonusEl = document.getElementById("bonus");
+    const resetBtn = document.getElementById("reset");
+
+    function createBoard() {
+      boardEl.innerHTML = "";
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell" + (STAR.includes(r) && STAR.includes(c) ? " star" : "");
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+          if (STAR.includes(r) && STAR.includes(c)) {
+            const dot = document.createElement("span");
+            dot.className = "star-dot";
+            cell.appendChild(dot);
+          }
+          cell.addEventListener("click", () => onClick(r, c));
+          cell.addEventListener("mouseenter", () => onEnter(r, c));
+          cell.addEventListener("mouseleave", onLeave);
+          boardEl.appendChild(cell);
+        }
+      }
+    }
+
+    function clearGhost() {
+      if (ghostEl) {
+        ghostEl.remove();
+        ghostEl = null;
+        ghostCell = null;
+      }
+    }
+
+    function drawGhost(r, c) {
+      clearGhost();
+      const cell = getCell(r, c);
+      if (!cell || board[r][c] !== 0) return;
+      ghostEl = document.createElement("div");
+      ghostEl.className = "ghost " + (currentPlayer === 1 ? "black" : "white");
+      ghostEl.setAttribute("aria-hidden", "true");
+      cell.appendChild(ghostEl);
+      ghostCell = [r, c];
+    }
+
+    function getCell(r, c) {
+      return boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    }
+
+    function onEnter(r, c) {
+      if (gameOver) return;
+      if (board[r][c] === 0 && (ghostCell === null || ghostCell[0] !== r || ghostCell[1] !== c))
+        drawGhost(r, c);
+    }
+
+    function onLeave() {
+      clearGhost();
+    }
+
+    function renderStone(r, c, player) {
+      const cell = getCell(r, c);
+      const old = cell.querySelector(".stone");
+      if (old) old.remove();
+      const stone = document.createElement("div");
+      stone.className = "stone " + (player === 1 ? "black" : "white");
+      cell.appendChild(stone);
+    }
+
+    function removeStone(r, c) {
+      board[r][c] = 0;
+      const cell = getCell(r, c);
+      const stone = cell.querySelector(".stone");
+      if (stone) stone.remove();
+    }
+
+    function removeRandomPrevious(excludeR, excludeC) {
+      if (Math.random() >= 0.1) return;
+      const candidates = [];
+      for (let r = 0; r < BOARD_SIZE; r++)
+        for (let c = 0; c < BOARD_SIZE; c++)
+          if (board[r][c] !== 0 && (r !== excludeR || c !== excludeC))
+            candidates.push([r, c]);
+      if (candidates.length === 0) return;
+      const [r, c] = candidates[Math.floor(Math.random() * candidates.length)];
+      removeStone(r, c);
+    }
+
+    function checkWin(r, c) {
+      const p = board[r][c];
+      const dirs = [[0,1],[1,0],[1,1],[-1,1]];
+      for (const [dr, dc] of dirs) {
+        let n = 1;
+        let nr = r + dr, nc = c + dc;
+        while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === p) {
+          n++; nr += dr; nc += dc;
+        }
+        nr = r - dr; nc = c - dc;
+        while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === p) {
+          n++; nr -= dr; nc -= dc;
+        }
+        if (n >= 5) return true;
+      }
+      return false;
+    }
+
+    function isBoardFull() {
+      return board.every(row => row.every(cell => cell !== 0));
+    }
+
+    function onClick(r, c) {
+      if (gameOver || board[r][c] !== 0) return;
+      clearGhost();
+
+      board[r][c] = currentPlayer;
+      renderStone(r, c, currentPlayer);
+
+      removeRandomPrevious(r, c);
+
+      if (checkWin(r, c)) {
+        gameOver = true;
+        bonusEl.textContent = "";
+        const winner = currentPlayer === 1 ? "黑棋" : "白棋";
+        statusEl.textContent = `游戏结束！${winner} 获胜`;
+        statusEl.style.color = "#e74c3c";
+        return;
+      }
+      if (isBoardFull()) {
+        gameOver = true;
+        bonusEl.textContent = "";
+        statusEl.textContent = "游戏结束！和棋";
+        statusEl.style.color = "#3498db";
+        return;
+      }
+
+      if (doubleMoveRemaining === 1) {
+        doubleMoveRemaining = 0;
+        bonusEl.textContent = "";
+        currentPlayer = 3 - currentPlayer;
+        statusEl.textContent = `轮到 ${currentPlayer === 1 ? "黑棋" : "白棋"} 下子`;
+      } else {
+        if (Math.random() < 0.1) {
+          doubleMoveRemaining = 1;
+          bonusEl.textContent = "🎲 连下两颗！请再下一子";
+          statusEl.textContent = `轮到 ${currentPlayer === 1 ? "黑棋" : "白棋"} 再下一子（连下两颗）`;
+        } else {
+          currentPlayer = 3 - currentPlayer;
+          bonusEl.textContent = "";
+          statusEl.textContent = `轮到 ${currentPlayer === 1 ? "黑棋" : "白棋"} 下子`;
+        }
+      }
+    }
+
+    function reset() {
+      gameOver = false;
+      currentPlayer = 1;
+      doubleMoveRemaining = 0;
+      board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+      clearGhost();
+      createBoard();
+      bonusEl.textContent = "";
+      statusEl.textContent = "轮到 黑棋 下子";
+      statusEl.style.color = "";
+    }
+
+    resetBtn.addEventListener("click", reset);
+    createBoard();
+  </script>
+</body>
+</html>
